@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="static/css/style.css">
-        <script src="static/js/script.js?version=1" defer></script>
+    <script src="static/js/script.js" defer></script>
+
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -20,6 +21,9 @@
             <ul class="nav-links">
                 <li><a href="/profile" class="btn">Profile</a></li>
                 <li><a href="/logout" class="btn">Logout</a></li>
+                <li class="language-switcher">
+                    <button id="languageToggle" class="btn">العربية</button>
+                </li>                
             </ul>
         </div>
     </nav>
@@ -36,7 +40,6 @@
                     </li>
                 {% endfor %}
             </ul>
-            <button id="export-all-btn" class="btn">Export All</button>
         </aside>
 
         <!-- Main Content Section -->
@@ -143,50 +146,53 @@
 
         // Export questions functionality
         if (exportButton) {
-            exportButton.addEventListener('click', function () {
-    const questions = [];
-    document.querySelectorAll('#generated-questions-section div').forEach(div => {
-        const questionElement = div.querySelector('p strong');
-        const optionElements = div.querySelectorAll('p');
+    exportButton.addEventListener('click', function () {
+        const questions = [];
+        document.querySelectorAll('#generated-questions-section div').forEach(div => {
+            const questionElement = div.querySelector('p strong'); // Question text
+            const optionElements = div.querySelectorAll('p:not(:first-child)'); // Options (if any)
 
-        if (questionElement) {  // Ensure the question text exists
-            const questionText = questionElement.textContent;
+            if (questionElement) { // Ensure the question text exists
+                const questionText = questionElement.textContent;
 
-            // Collect options, skip the first <p> which contains the question
-            const options = Array.from(optionElements).slice(1).map(p => p.textContent.trim());
+                if (optionElements.length > 0) {
+                    // Collect options (MCQ)
+                    const options = Array.from(optionElements).map(p => p.textContent.trim());
+                    questions.push([questionText, ...options].join('\n'));
+                } else {
+                    // Handle short-answer questions
+                    questions.push(questionText);
+                }
+            }
+        });
 
-            // Add question and options to the array
-            questions.push([questionText, ...options].join('\n'));
-        }
+        // Send the questions to the server
+        fetch('/export_question', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ questions: questions })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to export questions');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'questions.docx';
+            link.click();
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Could not export questions. Please try again.');
+        });
     });
+}
 
-    // Send the questions to the server
-    fetch('/export_question', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ questions: questions })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to export questions');
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'questions.docx';
-        link.click();
-    })
-    .catch(error => {
-        console.error(error);
-        alert('Could not export questions. Please try again.');
-    });
-});
-
-        }
     });
 </script>
 
