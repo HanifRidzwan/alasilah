@@ -208,12 +208,9 @@ def export_question():
 
         # Add each question with its options
         for question_data in questions:
-            # Validate and parse question data
             parts = question_data.split("\n")
-            if len(parts) < 2:  # Ensure at least one option exists
-                continue
-            question_text = parts[0].strip()
-            options = [opt.strip() for opt in parts[1:] if opt.strip()]
+            question_text = parts[0].strip()  # The first line is always the question text
+            options = [opt.strip() for opt in parts[1:] if opt.strip()]  # Remaining lines are options (if any)
 
             # Add question text with explicit RTL enforcement
             question_para = doc.add_paragraph()
@@ -225,14 +222,21 @@ def export_question():
             rtl_element = question_run._element.get_or_add_rPr().get_or_add_rtl()
             rtl_element.text = "true"
 
-            # Add options with explicit RTL enforcement
-            for option in options:
-                option_para = doc.add_paragraph()
-                option_run = option_para.add_run(option)
-                option_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                option_para.paragraph_format.right_to_left = True
-                rtl_element = option_run._element.get_or_add_rPr().get_or_add_rtl()
-                rtl_element.text = "true"
+            if options:
+                # Add options for MCQ questions
+                for option in options:
+                    option_para = doc.add_paragraph()
+                    option_run = option_para.add_run(option)
+                    option_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                    option_para.paragraph_format.right_to_left = True
+                    rtl_element = option_run._element.get_or_add_rPr().get_or_add_rtl()
+                    rtl_element.text = "true"
+            else:
+                # Add placeholder for short-answer questions
+                placeholder_para = doc.add_paragraph()
+                placeholder_para.add_run("__________").bold = True
+                placeholder_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                placeholder_para.paragraph_format.right_to_left = True
 
             # Add spacing between questions
             doc.add_paragraph()
@@ -249,27 +253,12 @@ def export_question():
         print("Error during export:", e)
         return jsonify({"error": "An error occurred during export"}), 500
 
-
-
-
-
-
-
-
-
-    return send_file(filepath, as_attachment=True, download_name=filename)
-
-
-
-
 from flask import session, redirect
 
 @app.route('/logout')
 def logout():
     session.clear()  # Clears all session data
     return redirect('/')  # Redirect to homepage
-
-
 
 import os
 
