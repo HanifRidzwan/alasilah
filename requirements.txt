@@ -1,0 +1,7 @@
+Flask==2.2.3
+argon2-cffi==21.3.0
+pandas==1.5.3
+python-docx==0.8.11
+scikit-learn==1.2.2
+camel-tools==1.0.0
+sqlite3-binary==3.37.0  # For SQLite operations

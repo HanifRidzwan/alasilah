@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/">
+                <div class="logo">
+                    <img src="static/images/logo.png" alt="System Logo">
+                    <span class="system-name">Al-As'ilah</span>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/dashboard" class="btn">Dashboard</a></li>
+                <li><a href="/logout" class="btn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Profile Form -->
+    <section id="signup-section"> <!-- Reusing signup-section style -->
+        <div class="form-container">
+            <h1>Profile</h1>
+            <form method="POST" action="/profile">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ email }}" required>
+
+                <label for="staff-id">Staff ID</label>
+                <input type="text" id="staff-id" name="staff_id" placeholder="Enter your Staff ID" value="{{ staff_id }}" required>
+
+                <label for="current-password">Current Password</label>
+                <div class="password-container">
+                    <input type="password" id="current-password" name="current_password" placeholder="Enter your current password" required>
+                    <img src="static/images/eye-icon.png" id="toggle-current-password" alt="Toggle Password Visibility">
+                </div>
+
+                <label for="new-password">New Password</label>
+                <div class="password-container">
+                    <input type="password" id="new-password" name="new_password" placeholder="Enter a new password">
+                    <img src="static/images/eye-icon.png" id="toggle-new-password" alt="Toggle Password Visibility">
+                </div>
+
+                <label for="confirm-new-password">Confirm New Password</label>
+                <div class="password-container">
+                    <input type="password" id="confirm-new-password" name="confirm_new_password" placeholder="Confirm your new password">
+                    <img src="static/images/eye-icon.png" id="toggle-confirm-new-password" alt="Toggle Password Visibility">
+                </div>
+
+                <button type="submit" class="btn-submit">Save Changes</button>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePasswordVisibility = (toggleButtonId, passwordInputId) => {
+                const toggleButton = document.getElementById(toggleButtonId);
+                const passwordInput = document.getElementById(passwordInputId);
+
+                toggleButton.addEventListener('click', function () {
+                    if (passwordInput.type === 'password') {
+                        passwordInput.type = 'text';
+                    } else {
+                        passwordInput.type = 'password';
+                    }
+                });
+            };
+
+            togglePasswordVisibility('toggle-current-password', 'current-password');
+            togglePasswordVisibility('toggle-new-password', 'new-password');
+            togglePasswordVisibility('toggle-confirm-new-password', 'confirm-new-password');
+        });
+    </script>
+</body>
+</html>

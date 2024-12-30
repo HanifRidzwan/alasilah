@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/">
+                <div class="logo">
+                    <img src="static/images/logo.png" alt="System Logo">
+                    <span class="system-name">Al-As'ilah</span>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/profile" class="btn">Profile</a></li>
+                <li><a href="/logout" class="btn">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Layout -->
+    <div class="dashboard-layout">
+        <!-- Sidebar Section -->
+        <aside class="sidebar">
+            <h2>Queries</h2>
+            <ul id="query-history">
+                {% for query in queries %}
+                    <li data-query="{{ query.query }}">
+                        {{ query.query }}
+                    </li>
+                {% endfor %}
+            </ul>
+            <button id="export-all-btn" class="btn">Export All</button>
+        </aside>
+
+        <!-- Main Content Section -->
+        <main class="main-content">
+            <section id="query-form-section">
+                <h2>Generate New Questions</h2>
+                <form id="query-form" method="POST" action="/dashboard">
+                    <label for="query">Enter Query</label>
+                    <textarea id="query" name="query" placeholder="e.g., أعطني أسئلة في النحو" required></textarea>
+
+                    <label for="question-count">Number of Questions</label>
+                    <input type="number" id="question-count" name="question_count" min="1" placeholder="Enter number of questions" required>
+
+                    <label for="question-type">Question Type</label>
+                    <select id="question-type" name="question_type" required>
+                        <option value="MCQ">Multiple Choice</option>
+                        <option value="Short Answer">Short Answer</option>
+                    </select>
+
+                    <div style="display: flex; justify-content: center; margin-top: 15px;">
+                        <button type="submit" class="btn">Generate</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="generated-questions-section">
+                <h2>Generated Questions</h2>
+                {% if queries and queries[-1].questions %}
+                    {% for question in queries[-1].questions %}
+                    <div style="direction: rtl; text-align: right; margin-bottom: 20px;">
+                        <p style="font-size: 18px;"><strong>{{ loop.index }}. {{ question["Question Text"] }}</strong></p>
+                        {% if question["Answer Options"] %}
+                            <p style="font-size: 16px; margin: 5px 0;">{{ question["Answer Options"][0] }}</p>
+                            <p style="font-size: 16px; margin: 5px 0;">{{ question["Answer Options"][1] }}</p>
+                            <p style="font-size: 16px; margin: 5px 0;">{{ question["Answer Options"][2] }}</p>
+                            <p style="font-size: 16px; margin: 5px 0;">{{ question["Answer Options"][3] }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No questions generated yet.</p>
+                {% endif %}
+                <div id="question-actions">
+                    {% if queries and queries[-1].questions %}
+                    <button id="export-question-btn" class="btn">Export to DOCX</button>
+                    <button id="delete-question-btn" class="btn">Delete Questions</button>
+                    {% endif %}
+                    <button id="new-question-btn" class="btn">New Question</button>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const queryHistory = document.getElementById('query-history');
+        const questionsList = document.getElementById('generated-questions-section');
+        const deleteQuestionsButton = document.getElementById('delete-question-btn');
+        const exportButton = document.getElementById('export-question-btn');
+
+        // Load questions from query history
+        queryHistory.addEventListener('click', function (event) {
+            const clickedQuery = event.target.dataset.query;
+            if (clickedQuery) {
+                fetch(`/load-questions?query=${encodeURIComponent(clickedQuery)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to load questions');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        questionsList.innerHTML = '';
+                        data.questions.forEach(question => {
+                            const questionDiv = document.createElement('div');
+                            questionDiv.style.direction = 'rtl';
+                            questionDiv.style.textAlign = 'right';
+                            questionDiv.style.marginBottom = '20px';
+                            questionDiv.innerHTML = `
+                                <p style='font-size: 18px;'><strong>${question.question}</strong></p>
+                                <p style='font-size: 16px;'>أ. ${question.options[0]}</p>
+                                <p style='font-size: 16px;'>ب. ${question.options[1]}</p>
+                                <p style='font-size: 16px;'>ج. ${question.options[2]}</p>
+                                <p style='font-size: 16px;'>د. ${question.options[3]}</p>
+                            `;
+                            questionsList.appendChild(questionDiv);
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert('Could not load questions. Please try again.');
+                    });
+            }
+        });
+
+        // Delete questions functionality
+        if (deleteQuestionsButton) {
+            deleteQuestionsButton.addEventListener('click', function () {
+                questionsList.innerHTML = '<p>No questions generated yet.</p>';
+            });
+        }
+
+        // Export questions functionality
+        if (exportButton) {
+            exportButton.addEventListener('click', function () {
+    const questions = [];
+    document.querySelectorAll('#generated-questions-section div').forEach(div => {
+        const questionElement = div.querySelector('p strong');
+        const optionElements = div.querySelectorAll('p');
+
+        if (questionElement) {  // Ensure the question text exists
+            const questionText = questionElement.textContent;
+
+            // Collect options, skip the first <p> which contains the question
+            const options = Array.from(optionElements).slice(1).map(p => p.textContent.trim());
+
+            // Add question and options to the array
+            questions.push([questionText, ...options].join('\n'));
+        }
+    });
+
+    // Send the questions to the server
+    fetch('/export_question', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ questions: questions })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to export questions');
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'questions.docx';
+        link.click();
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Could not export questions. Please try again.');
+    });
+});
+
+        }
+    });
+</script>
+
+
+
+
+</body>
+</html>

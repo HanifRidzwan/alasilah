@@ -1,0 +1,5 @@
+siap handle question generation part
+siap handle export yang sebenar
+siap logout
+tambah training data
+sidebar x func
