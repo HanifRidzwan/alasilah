@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f9f9f9;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .form-container h1 {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-container p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container label {
+            font-size: 14px;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .form-container input[type="text"] {
+            
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-container .btn-submit {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #6c63ff;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-container .btn-submit:hover {
+            background-color: #4e46d0;
+        }
+
+        .form-container #resend-link {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .form-container #resend-link a {
+            color: #6c63ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .form-container #resend-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Verification Form -->
+        <h1>Email Verification</h1>
+        <p>
+            A verification code has been sent to your email. Please enter it below within 
+            <strong>1 minute</strong> to complete your sign-up process.
+        </p>
+                <form id="verify-form" action="/verify" method="POST">
+            <label for="code">Verification Code</label>
+            <input type="text" id="code" name="code" placeholder="Enter your verification code" required>
+            <button type="submit" class="btn-submit">Verify</button>
+        </form>
+        <p id="resend-link">Didn’t receive the code? <a href="/resend">Resend Code</a></p>
+    </div>
+
+
+    <script>
+        // Auto-dismiss flash messages after 3 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.transition = "opacity 0.5s";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>
